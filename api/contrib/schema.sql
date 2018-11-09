@@ -2,12 +2,10 @@ DROP TABLE IF EXISTS phone_call;
 DROP TABLE IF EXISTS phone_bill;
 
 CREATE TABLE phone_call (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  type INTEGER NOT NULL,
-  started TIMESTAMP,
-  finished TIMESTAMP,
-  call_id INTEGER,
-  source TEXT,
-  destination TEXT,
-  price REAL
+  record_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  record_type INTEGER NOT NULL,
+  record_timestamp TIMESTAMP,
+  call_identifier INTEGER,
+  origin_number TEXT,
+  destination_number TEXT
 );
