@@ -26,3 +26,34 @@ def get_date_or_none(value):
             pass
 
     return None
+
+
+def get_int_or_none(value):
+    """
+    Return the value converted as integer type or None.
+
+    Args:
+        value (any): Value to be converted to a integer.
+
+    Returns:
+        (integer/None): When is possible to convert the value in a integer the function
+            will return the integer object. If not will return None.
+    """
+    if not value:
+        return None
+
+    if isinstance(value, int):
+        return value
+
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def is_valid_phone_number(number):
+    """Check if the phone number is in the valid format."""
+    if not number:
+        return False
+
+    return 10 <= len(str(number)) <= 11

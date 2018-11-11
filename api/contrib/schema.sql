@@ -9,3 +9,18 @@ CREATE TABLE phone_call (
   origin_number TEXT,
   destination_number TEXT
 );
+
+CREATE TABLE phone_bill (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  phone_number TEXT,
+  period TEXT
+);
+
+CREATE TABLE phone_bill_call (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  destination_number TEXT,
+  call_start TIMESTAMP,
+  call_end TIMESTAMP,
+  duration INTEGER,
+  price REAL
+);
