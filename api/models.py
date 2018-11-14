@@ -54,7 +54,7 @@ class CallRecord:
                 error_messages.append(constants.MESSAGE_INVALID_FIELD.format('destination_number'))
 
         if self.call_identifier and self.record_type and self.exists_call_id():
-            error_messages.append(constants.MESSAGE_DUPLICATED_CALL_ID.format(self.call_id, self.record_type))
+            error_messages.append(constants.MESSAGE_DUPLICATED_CALL_ID.format(self.call_identifier, self.record_type))
 
         return error_messages
 
@@ -124,7 +124,7 @@ class PhoneBill:
         if period:
             self.period = period
         else:
-            self.period = self.last_closed_period()
+            self.period = self.last_closed_period(datetime.today())
         if record_calls:
             self.record_calls = record_calls
         else:
@@ -144,13 +144,13 @@ class PhoneBill:
             'calls': calls_dict
         }
 
-    def last_closed_period(self):
+    def last_closed_period(self, base_date):
         """Return the last closed period based on the current date."""
-        today = datetime.today()
-        first_day = '{}/{}'.format(today.year, today.month)
+        first_day = '{}/{}'.format(base_date.year, base_date.month)
         first_day = datetime.strptime(first_day, '%Y/%m')
         first_day = first_day - timedelta(days=1)
-        return '{}/{}'.format(first_day.month, first_day.year)
+
+        return '{:02}/{:0004}'.format(first_day.month, first_day.year)
 
     def validate(self):
         """
@@ -168,7 +168,7 @@ class PhoneBill:
 
         if self.period and not self.is_valid_period(self.period):
             error_messages.append(constants.MESSAGE_INVALID_FIELD.format('period'))
-        elif self.period and not self.is_closed_period(self.period):
+        elif self.period and not self.is_closed_period(self.period, datetime.today()):
             error_messages.append(constants.MESSAGE_INVALID_PERIOD.format('period'))
 
         if self.record_calls and not isinstance(self.record_calls, list):
@@ -196,7 +196,7 @@ class PhoneBill:
 
         return True
 
-    def is_closed_period(self, value):
+    def is_closed_period(self, value, base_date):
         """Check if the period is a closed month lower than today."""
         if not self.is_valid_period(value):
             return False
@@ -205,8 +205,7 @@ class PhoneBill:
         month = get_int_or_none(splitted[0])
         year = get_int_or_none(splitted[1])
 
-        today = datetime.today()
-        if today.year < year or today.year == year and today.month <= month:
+        if base_date.year < year or base_date.year == year and base_date.month <= month:
             return False
 
         return True
@@ -300,6 +299,8 @@ class PhoneBill:
 
         for end_record in phone_end_records:
             start_record = dict_start_records.get(end_record.call_identifier)
+            if not start_record:
+                continue
             phone_bill_call = PhoneBillCall(
                 start_record.destination_number,
                 start_record.record_timestamp,

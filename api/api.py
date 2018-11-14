@@ -34,6 +34,7 @@ def phone_call():
             item.get('source'),
             item.get('destination'),
         )
+
         errors = record.validate()
         if errors:
             return jsonify({
