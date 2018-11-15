@@ -1,1 +1,1 @@
-flask run
+gunicorn api:'create_app()'
