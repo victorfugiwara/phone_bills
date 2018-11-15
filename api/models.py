@@ -359,7 +359,7 @@ class PhoneBill:
         cursor = db.cursor()
 
         exists_period = self.exists_period()
-
+        result = None
         if not exists_period:
             fields = ['phone_number', 'period']
 
@@ -369,7 +369,10 @@ class PhoneBill:
                 ', '.join(['?'] * len(fields))
             )
             values = [self.phone_number, self.period]
-            cursor.execute(sql_command, values)
+            result = cursor.execute(sql_command, values)
+
+        if result and result.rowcount <= 0:
+            return False
 
         for call in self.record_calls:
             call.save()
@@ -387,11 +390,12 @@ class PhoneBillCall:
     def __init__(self, destination_number, call_start, call_end, bill_call_id=None):
         """Constructor used to populate the data of the object."""
         self.destination_number = destination_number
-        self.call_start = call_start
-        self.call_end = call_end
+        self.call_start = get_date_or_none(call_start)
+        self.call_end = get_date_or_none(call_end)
         if self.call_start and self.call_end:
             self.duration = str(self.call_end - self.call_start)
         self.id = bill_call_id
+        self.price = None
 
     def to_dict(self):
         """Format the object in a json document."""
@@ -420,13 +424,9 @@ class PhoneBillCall:
 
         if not self.call_start:
             error_messages.append(constants.MESSAGE_MANDATORY_FIELD.format('call_start'))
-        elif not get_date_or_none(self.call_start):
-            error_messages.append(constants.MESSAGE_INVALID_FIELD.format('call_start'))
 
         if not self.call_end:
             error_messages.append(constants.MESSAGE_MANDATORY_FIELD.format('call_end'))
-        elif not get_date_or_none(self.call_end):
-            error_messages.append(constants.MESSAGE_INVALID_FIELD.format('call_end'))
 
         return error_messages
 

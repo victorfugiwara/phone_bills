@@ -6,7 +6,7 @@ import pytest
 
 from api import create_app
 from api.db import init_db
-from api.models import CallRecord, PhoneBill
+from api.models import CallRecord, PhoneBill, PhoneBillCall
 
 
 VALID_CALL_RECORD_START = {
@@ -26,6 +26,13 @@ INVALID_PHONE_BILL_TYPES = {
     'phone_number': '12312',
     'period': 'anything',
     'record_calls': 'this is not a list',
+}
+
+VALID_PHONE_BILL_CALL = {
+    'destination_number': '14981227002',
+    'call_start': '2018-11-11T19:22:16',
+    'call_end': '2018-11-11T19:22:16',
+    'bill_call_id': 1,
 }
 
 
@@ -89,4 +96,15 @@ def invalid_phone_bill():
         INVALID_PHONE_BILL_TYPES.get('phone_number'),
         INVALID_PHONE_BILL_TYPES.get('period'),
         INVALID_PHONE_BILL_TYPES.get('record_calls'),
+    )
+
+
+@pytest.fixture
+def phone_bill_call():
+    """Fixture to return a valid PhoneBill object."""
+    return PhoneBillCall(
+        VALID_PHONE_BILL_CALL.get('destination_number'),
+        VALID_PHONE_BILL_CALL.get('call_start'),
+        VALID_PHONE_BILL_CALL.get('call_end'),
+        bill_call_id=VALID_PHONE_BILL_CALL.get('bill_call_id'),
     )

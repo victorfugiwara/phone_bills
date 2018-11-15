@@ -4,7 +4,7 @@ import pytest
 
 from datetime import datetime
 
-from api.models import CallRecord, PhoneBill
+from api.models import CallRecord, check_exists_id, PhoneBill, PhoneBillCall
 
 
 VALID_CALL_RECORD_START = {
@@ -344,7 +344,7 @@ def test_phone_bill_to_dict():
     (datetime(2018, 12, 31), '11/2018'),
     (datetime(2019, 1, 1), '12/2018'),
 ])
-def test_last_closed_period(tested_date, expected_result, phone_bill):
+def test_phone_bill_last_closed_period(tested_date, expected_result, phone_bill):
     """Test last_closed_period function from PhoneBill class."""
     result = phone_bill.last_closed_period(tested_date)
 
@@ -364,7 +364,7 @@ def test_last_closed_period(tested_date, expected_result, phone_bill):
     ('1/2018', True),
     ('12/2018', True),
 ])
-def test_is_valid_period(tested_period, expected_result, phone_bill):
+def test_phone_bill_is_valid_period(tested_period, expected_result, phone_bill):
     """Test is_valid_period function from PhoneBill class."""
     result = phone_bill.is_valid_period(tested_period)
 
@@ -380,7 +380,7 @@ def test_is_valid_period(tested_period, expected_result, phone_bill):
     (True, '12/2018', datetime(2019, 1, 1), True),
     (True, '01/2018', datetime(2018, 11, 14), True),
 ])
-def test_is_closed_period(valid_period, value, base_data, expected_result, phone_bill):
+def test_phone_bill_is_closed_period(valid_period, value, base_data, expected_result, phone_bill):
     """Test is_closed_period function from PhoneBill class."""
     phone_bill.is_valid_period = mock.Mock(return_value=valid_period)
 
@@ -394,7 +394,7 @@ def test_is_closed_period(valid_period, value, base_data, expected_result, phone
     (None, '11/2018'),
     ('14981227001', None),
 ])
-def test_exists_period_invalid_data(phone_number, period, phone_bill):
+def test_phone_bill_exists_period_invalid_data(phone_number, period, phone_bill):
     """Test exists_period function from PhoneBill class with invalid data."""
     phone_bill.phone_number = phone_number
     phone_bill.period = period
@@ -405,7 +405,7 @@ def test_exists_period_invalid_data(phone_number, period, phone_bill):
 
 
 @mock.patch('api.models.get_db')
-def test_exists_period(get_db, phone_bill):
+def test_phone_bill_exists_period(get_db, phone_bill):
     """Test exists_period function from PhoneBill class."""
     get_db.return_value.cursor.return_value.execute.return_value.fetchone.return_value = {}
 
@@ -420,7 +420,7 @@ def test_exists_period(get_db, phone_bill):
 
 @mock.patch('api.models.CallRecord')
 @mock.patch('api.models.get_db')
-def test_get_phone_end_records(get_db, record_class, phone_bill):
+def test_phone_bill_get_phone_end_records(get_db, record_class, phone_bill):
     """Test get_phone_end_records function from PhoneBill class."""
     records_found = [
         ['A', 'B', 'C', 'D', 'E', 'F'],
@@ -482,7 +482,7 @@ def test_get_phone_end_records(get_db, record_class, phone_bill):
 
 @mock.patch('api.models.CallRecord')
 @mock.patch('api.models.get_db')
-def test_get_phone_start_records(get_db, record_class, phone_bill):
+def test_phone_bill_get_phone_start_records(get_db, record_class, phone_bill):
     """Test get_phone_start_records function from PhoneBill class."""
     records_found = [
         ['A', 'B', 'C', 'D', 'E', 'F'],
@@ -525,12 +525,158 @@ def test_get_phone_start_records(get_db, record_class, phone_bill):
     ]
 
 
-def test_calculate_phone_bill(phone_bill, record_start):
+@mock.patch('api.models.PhoneBillCall')
+def test_phone_bill_calculate_phone_bill(bill_call_class, phone_bill, record_start):
     """Test calculate_phone_bill function from PhoneBill class."""
     phone_bill.get_phone_end_records = mock.Mock(return_value=[record_start])
     phone_bill.get_phone_start_records = mock.Mock(return_value=[record_start])
+    bill_call_record = PhoneBillCall(
+        record_start.destination_number,
+        record_start.record_timestamp,
+        record_start.record_timestamp
+    )
+    bill_call_class.return_value = bill_call_record
 
     phone_bill.calculate_phone_bill()
 
     phone_bill.get_phone_end_records.assert_called_once()
     phone_bill.get_phone_start_records.assert_called_once_with([1])
+
+    assert phone_bill.record_calls == [bill_call_record]
+
+
+@mock.patch('api.models.get_db')
+def test_phone_bill_save(get_db, phone_bill):
+    """Test save function from PhoneBill class."""
+    phone_bill.exists_period = mock.Mock(return_value=False)
+    get_db.return_value.cursor.return_value.execute.return_value.rowcount = 1
+
+    result = phone_bill.save()
+
+    assert result
+
+    get_db.return_value.cursor.return_value.execute.assert_called_once_with(
+        'INSERT INTO phone_bill (phone_number, period) VALUES (?, ?)',
+        [phone_bill.phone_number, phone_bill.period]
+    )
+
+
+def test_phone_bill_call_to_dict(phone_bill_call):
+    """Test to_dict function from PhoneBillCall class."""
+    result = phone_bill_call.to_dict()
+
+    assert result == {
+        'id': phone_bill_call.id,
+        'destination_number': phone_bill_call.destination_number,
+        'call_start': phone_bill_call.call_start,
+        'call_end': phone_bill_call.call_end,
+        'duration': phone_bill_call.duration,
+        'price': phone_bill_call.price,
+    }
+
+
+def test_phone_bill_call_validate(phone_bill_call):
+    """Test validate function from PhoneBillCall class."""
+    result = phone_bill_call.validate()
+
+    assert not result
+
+
+def test_phone_bill_call_validate_mandatory():
+    """Test validate function from PhoneBillCall class missing mandatory fields."""
+    obj = PhoneBillCall(
+        None,
+        None,
+        None,
+    )
+
+    result = obj.validate()
+
+    assert 'The field destination_number is mandatory.' in result
+    assert 'The field call_start is mandatory.' in result
+    assert 'The field call_end is mandatory.' in result
+
+
+@mock.patch('api.models.is_valid_phone_number')
+def test_phone_bill_call_validate_invalid(is_valid_phone_number, phone_bill_call):
+    """Test validate function from PhoneBillCall class with invalid fields."""
+    is_valid_phone_number.return_value = False
+
+    result = phone_bill_call.validate()
+
+    assert 'The field destination_number has an invalid value.' in result
+
+
+@mock.patch('api.models.check_exists_id')
+@mock.patch('api.models.get_db')
+def test_phone_bill_call_save_insert(get_db, check_exists_id, phone_bill_call):
+    """Test save function from PhoneBillCall class when executes insert."""
+    check_exists_id.return_value = False
+    get_db.return_value.cursor.return_value.execute.return_value.rowcount = 1
+
+    result = phone_bill_call.save()
+
+    assert result
+
+    get_db.return_value.cursor.return_value.execute.assert_called_once_with(
+        (
+            'INSERT INTO phone_bill_call ('
+            'destination_number, call_start, call_end, duration, price, id'
+            ') VALUES (?, ?, ?, ?, ?, ?)'
+        ),
+        [
+            phone_bill_call.destination_number, phone_bill_call.call_start, phone_bill_call.call_end,
+            phone_bill_call.duration, phone_bill_call.price, phone_bill_call.id
+        ]
+    )
+
+
+@mock.patch('api.models.check_exists_id')
+@mock.patch('api.models.get_db')
+def test_phone_bill_call_save_update(get_db, check_exists_id, phone_bill_call):
+    """Test save function from PhoneBillCall class when executes update."""
+    check_exists_id.return_value = True
+    get_db.return_value.cursor.return_value.execute.return_value.rowcount = 1
+
+    result = phone_bill_call.save()
+
+    assert result
+
+    get_db.return_value.cursor.return_value.execute.assert_called_once_with(
+        (
+            'UPDATE phone_bill_call SET'
+            ' destination_number = ?, call_start = ?, call_end = ?, duration = ?, price = ?'
+            ' WHERE id = ?'
+        ),
+        [
+            phone_bill_call.destination_number, phone_bill_call.call_start, phone_bill_call.call_end,
+            phone_bill_call.duration, phone_bill_call.price, phone_bill_call.id
+        ]
+    )
+
+
+def test_check_exists_id_without_id():
+    """Test check_exists_id function when id_value is not present on parameters."""
+    cursor = mock.Mock()
+    table_name = 'table'
+    id_field = 'id_of_table'
+    id_value = None
+
+    result = check_exists_id(cursor, table_name, id_field, id_value)
+
+    assert not result
+    cursor.execute.assert_not_called()
+
+
+def test_check_exists_id():
+    """Test check_exists_id function."""
+    cursor = mock.Mock()
+    cursor.execute.return_value.fetchone.return_value = [1]
+    table_name = 'table'
+    id_field = 'id_of_table'
+    id_value = 33
+
+    result = check_exists_id(cursor, table_name, id_field, id_value)
+
+    assert result
+    cursor.execute.assert_called_once_with('SELECT 1 FROM table WHERE id_of_table = 33')
