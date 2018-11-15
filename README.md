@@ -11,9 +11,11 @@ To push to Heroku, you'll need to install the [Heroku CLI](https://devcenter.her
 
 ```sh
 $ git clone https://github.com/victorfugiwara/phone_bills.git
-$ cd phone_bills
+$ cd phone_bills/
 
-$ python3 -m venv phone_bills
+$ virtualenv env -p python3
+$ source env/bin/activate
+
 $ pip install -r requirements.txt
 
 $ make init-db
