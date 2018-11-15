@@ -1,1 +1,1 @@
-web: gunicorn api:'create_app()'
+web: flask init-db && flask run
