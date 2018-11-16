@@ -6,9 +6,6 @@ This is an api used to calculate the cost of Phone Bills.
 
 Make sure you have Python 3.6.5 installed.
 
-
-To push to Heroku, you'll need to install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli).
-
 ```sh
 $ git clone https://github.com/victorfugiwara/phone_bills.git
 $ cd phone_bills/
@@ -25,6 +22,8 @@ $ make run
 Your app should now be running on [localhost:5000](http://localhost:5000/).
 
 ## Deploying to Heroku
+
+To push to Heroku, you'll need to install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli).
 
 ```sh
 $ git clone https://github.com/victorfugiwara/phone_bills.git

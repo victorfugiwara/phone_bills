@@ -20,10 +20,12 @@ def get_date_or_none(value):
         return value
 
     if isinstance(value, str):
-        try:
-            return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S')
-        except (ValueError, TypeError):
-            pass
+        formats = ['%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%SZ']
+        for convert_format in formats:
+            try:
+                return datetime.strptime(value, convert_format)
+            except (ValueError, TypeError):
+                pass
 
     return None
 

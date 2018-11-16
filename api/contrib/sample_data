@@ -1,0 +1,82 @@
+Insert the following calls to your app after it is deployed to a working environment (eg. Heroku, gigalixir). This sample data will be used in your evaluation, so do this as the last step before submitting the project.
+
+The following phone calls have been made from the number 99988526423 to 9933468278 (whitespaces are used here only for readability purposes, the phone numbers formats have been specified on a previous section).
+
+call_id: 70, started at 2016-02-29T12:00:00Z and ended at 2016-02-29T14:00:00Z.
+call_id: 71, started at 2017-12-11T15:07:13Z and ended at 2017-12-11T15:14:56Z.
+call_id: 72, started at 2017-12-12T22:47:56Z and ended at 2017-12-12T22:50:56Z.
+call_id: 73, started at 2017-12-12T21:57:13Z and ended at 2017-12-12T22:10:56Z.
+call_id: 74, started at 2017-12-12T04:57:13Z and ended at 2017-12-12T06:10:56Z.
+call_id: 75, started at 2017-12-13T21:57:13Z and ended at 2017-12-14T22:10:56Z.
+call_id: 76, started at 2017-12-12T15:07:58Z and ended at 2017-12-12T15:12:56Z.
+call_id: 77, started at 2018-02-28T21:57:13Z and ended at 2018-03-01T22:10:56Z.
+
+
+{"type":"start","timestamp":"2016-02-29T12:00:00Z","call_id":70,"source":"99988526423","destination":"9933468278"},
+{"type":"end","timestamp":"2016-02-29T14:00:00Z","call_id":70},
+{"type":"start","timestamp":"2017-12-11T15:07:13Z","call_id":71,"source":"99988526423","destination":"9933468278"},
+{"type":"end","timestamp":"2017-12-11T15:14:56Z","call_id":71},
+{"type":"start","timestamp":"2017-12-12T22:47:56Z","call_id":72,"source":"99988526423","destination":"9933468278"},
+{"type":"end","timestamp":"2017-12-12T22:50:56Z","call_id":72},
+{"type":"start","timestamp":"2017-12-12T21:57:13Z","call_id":73,"source":"99988526423","destination":"9933468278"},
+{"type":"end","timestamp":"2017-12-12T22:10:56Z","call_id":73},
+{"type":"start","timestamp":"2017-12-12T04:57:13Z","call_id":74,"source":"99988526423","destination":"9933468278"},
+{"type":"end","timestamp":"2017-12-12T06:10:56Z","call_id":74},
+{"type":"start","timestamp":"2017-12-13T21:57:13Z","call_id":75,"source":"99988526423","destination":"9933468278"},
+{"type":"end","timestamp":"2017-12-14T22:10:56Z","call_id":75},
+{"type":"start","timestamp":"2017-12-12T15:07:58Z","call_id":76,"source":"99988526423","destination":"9933468278"},
+{"type":"end","timestamp":"2017-12-12T15:12:56Z","call_id":76},
+{"type":"start","timestamp":"2018-02-28T21:57:13Z","call_id":77,"source":"99988526423","destination":"9933468278"},
+{"type":"end","timestamp":"2018-03-01T22:10:56Z","call_id":77},
+
+
+
+[
+{"type":"start","timestamp":"2018-09-01T00:00:00","call_id":1,"source":"14981227001","destination":"1432343335"},
+{"type":"end","timestamp":"2018-09-01T00:05:34","call_id":1},
+{"type":"start","timestamp":"2018-09-01T05:59:03","call_id":2,"source":"14981227001","destination":"1432220945"},
+{"type":"end","timestamp":"2018-09-01T05:59:50","call_id":2},
+{"type":"start","timestamp":"2018-09-02T06:00:00","call_id":3,"source":"14981227001","destination":"14998765434"},
+{"type":"end","timestamp":"2018-09-02T06:05:59","call_id":3},
+{"type":"start","timestamp":"2018-09-03T15:51:34","call_id":4,"source":"14981227001","destination":"14991923455"},
+{"type":"end","timestamp":"2018-09-03T16:03:23","call_id":4},
+{"type":"start","timestamp":"2018-09-04T21:59:10","call_id":5,"source":"14981227001","destination":"14991923455"},
+{"type":"end","timestamp":"2018-09-04T21:59:59","call_id":5},
+{"type":"start","timestamp":"2018-09-05T23:59:59","call_id":6,"source":"14981227001","destination":"14988123232"},
+{"type":"end","timestamp":"2018-09-06T00:00:01","call_id":6},
+{"type":"start","timestamp":"2018-09-07T03:54:21","call_id":7,"source":"14981227001","destination":"14988123232"},
+{"type":"end","timestamp":"2018-09-07T04:53:00","call_id":7},
+{"type":"start","timestamp":"2018-09-08T16:23:56","call_id":8,"source":"14981227001","destination":"14981230094"},
+{"type":"end","timestamp":"2018-09-08T17:00:45","call_id":8},
+{"type":"start","timestamp":"2018-09-09T23:34:07","call_id":9,"source":"14981227001","destination":"1432324598"},
+{"type":"end","timestamp":"2018-09-10T00:01:56","call_id":9},
+{"type":"start","timestamp":"2018-09-11T02:45:54","call_id":10,"source":"14981227001","destination":"1433312456"},
+{"type":"end","timestamp":"2018-09-11T03:00:23","call_id":10},
+{"type":"start","timestamp":"2018-10-05T06:00:00","call_id":11,"source":"14981227001","destination":"14998887654"},
+{"type":"end","timestamp":"2018-10-05T06:00:02","call_id":11},
+{"type":"start","timestamp":"2018-10-09T06:00:04","call_id":12,"source":"14981227001","destination":"14998887654"},
+{"type":"end","timestamp":"2018-10-09T06:01:00","call_id":12},
+{"type":"start","timestamp":"2018-10-12T23:23:23","call_id":13,"source":"14981227001","destination":"1432324455"},
+{"type":"end","timestamp":"2018-10-13T00:00:00","call_id":13},
+{"type":"start","timestamp":"2018-10-16T04:54:21","call_id":14,"source":"14981227001","destination":"1432324455"},
+{"type":"end","timestamp":"2018-10-16T05:59:34","call_id":14},
+{"type":"start","timestamp":"2018-10-18T12:01:45","call_id":15,"source":"14981227001","destination":"1833445566"},
+{"type":"end","timestamp":"2018-10-18T12:02:45","call_id":15},
+{"type":"start","timestamp":"2018-10-20T23:58:59","call_id":16,"source":"14981227001","destination":"1434357263"},
+{"type":"end","timestamp":"2018-10-20T23:59:59","call_id":16},
+{"type":"start","timestamp":"2018-10-23T01:00:00","call_id":17,"source":"14981227001","destination":"1432324455"},
+{"type":"end","timestamp":"2018-10-23T01:59:59","call_id":17},
+{"type":"start","timestamp":"2018-10-25T19:56:23","call_id":18,"source":"14981227001","destination":"1943536785"},
+{"type":"end","timestamp":"2018-10-25T22:00:00","call_id":18},
+{"type":"start","timestamp":"2018-10-27T20:15:55","call_id":19,"source":"14981227001","destination":"1345632789"},
+{"type":"end","timestamp":"2018-10-27T22:01:55","call_id":19},
+{"type":"start","timestamp":"2018-10-30T05:30:04","call_id":20,"source":"14981227001","destination":"1345632789"},
+{"type":"end","timestamp":"2018-10-30T06:30:26","call_id":20}
+]
+
+
+
+
+
+
+

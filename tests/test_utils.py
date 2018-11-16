@@ -12,6 +12,7 @@ from api import utils
     ('2018-11-10T13:45:33', datetime(2018, 11, 10, 13, 45, 33)),
     ('2000-1-1T1:1:1', datetime(2000, 1, 1, 1, 1, 1)),
     ('not a date', None),
+    ('2018-11-10T13:45:33Z', datetime(2018, 11, 10, 13, 45, 33)),
 ])
 def test_get_date_or_none(value, expected_result):
     """Test get_date_or_none function."""
