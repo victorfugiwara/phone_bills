@@ -27,6 +27,9 @@ Your app should now be running on [localhost:5000](http://localhost:5000/).
 ## Deploying to Heroku
 
 ```sh
+$ git clone https://github.com/victorfugiwara/phone_bills.git
+$ cd phone_bills/
+
 $ heroku create
 $ git push heroku master
 
