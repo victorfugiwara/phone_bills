@@ -18,6 +18,8 @@ CREATE TABLE phone_bill (
 
 CREATE TABLE phone_bill_call (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bill_call_id INTEGER,
+  call_identifier INTEGER,
   destination_number TEXT,
   call_start TIMESTAMP,
   call_end TIMESTAMP,

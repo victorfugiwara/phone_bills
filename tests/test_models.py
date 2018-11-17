@@ -4,7 +4,7 @@ import pytest
 
 from datetime import datetime
 
-from api.models import CallRecord, check_exists_id, PhoneBill, PhoneBillCall
+from api.models import CallRecord, check_exists_id, get_by_id, PhoneBill, PhoneBillCall
 
 
 VALID_CALL_RECORD_START = {
@@ -61,8 +61,10 @@ def test_call_record_validate_start(record_start):
     assert result == []
 
 
-def test_call_record_validate_end():
+@mock.patch('api.models.get_by_id')
+def test_call_record_validate_end(get_by_id):
     """Test validate function from CallRecord class with valid end data."""
+    get_by_id.return_value = None
     obj = CallRecord(
         VALID_CALL_RECORD_END.get('record_id'),
         VALID_CALL_RECORD_END.get('record_type'),
@@ -76,8 +78,10 @@ def test_call_record_validate_end():
     assert result == []
 
 
-def test_call_record_validate_mandatory():
+@mock.patch('api.models.get_by_id')
+def test_call_record_validate_mandatory(get_by_id):
     """Test validate function from CallRecord class with data without mandatory fields."""
+    get_by_id.return_value = None
     obj = CallRecord(
         INVALID_CALL_RECORD_WITHOUT_MANDATORY.get('record_id'),
         INVALID_CALL_RECORD_WITHOUT_MANDATORY.get('record_type'),
@@ -94,8 +98,10 @@ def test_call_record_validate_mandatory():
     assert 'The field call_identifier is mandatory.' in result
 
 
-def test_call_record_validate_mandatory_start():
+@mock.patch('api.models.get_by_id')
+def test_call_record_validate_mandatory_start(get_by_id):
     """Test validate function from CallRecord class with data without mandatory fields for start record."""
+    get_by_id.return_value = None
     obj = CallRecord(
         INVALID_CALL_RECORD_WITHOUT_MANDATORY_START.get('record_id'),
         INVALID_CALL_RECORD_WITHOUT_MANDATORY_START.get('record_type'),
@@ -113,8 +119,10 @@ def test_call_record_validate_mandatory_start():
     assert 'The field destination_number is mandatory.' in result
 
 
-def test_call_record_validate_types():
+@mock.patch('api.models.get_by_id')
+def test_call_record_validate_types(get_by_id):
     """Test validate function from CallRecord class with invalid data types."""
+    get_by_id.return_value = None
     obj = CallRecord(
         INVALID_CALL_RECORD_TYPES.get('record_id'),
         INVALID_CALL_RECORD_TYPES.get('record_type'),
@@ -131,8 +139,10 @@ def test_call_record_validate_types():
     assert 'The field record_timestamp has an invalid value.' in result
 
 
-def test_call_record_validate_types_start():
+@mock.patch('api.models.get_by_id')
+def test_call_record_validate_types_start(get_by_id):
     """Test validate function from CallRecord class with invalid data types of a start call."""
+    get_by_id.return_value = None
     obj = CallRecord(
         INVALID_CALL_RECORD_TYPES_START.get('record_id'),
         INVALID_CALL_RECORD_TYPES_START.get('record_type'),
@@ -162,8 +172,10 @@ def test_call_record_validate_duplicated(record_start):
     assert duplicate_msg in result
 
 
-def test_call_record_exists_call_id_invalid_parameters():
+@mock.patch('api.models.get_by_id')
+def test_call_record_exists_call_id_invalid_parameters(get_by_id):
     """Test exists_call_id function from CallRecord class with invalid parameters."""
+    get_by_id.return_value = None
     obj = CallRecord(
         VALID_CALL_RECORD_START.get('record_id'),
         VALID_CALL_RECORD_START.get('record_type'),
@@ -525,13 +537,16 @@ def test_phone_bill_get_phone_start_records(get_db, record_class, phone_bill):
     ]
 
 
+@mock.patch('api.models.get_by_id')
 @mock.patch('api.models.PhoneBillCall')
-def test_phone_bill_calculate_phone_bill(bill_call_class, phone_bill, record_start):
+def test_phone_bill_calculate_phone_bill(bill_call_class, get_by_id, phone_bill, record_start):
     """Test calculate_phone_bill function from PhoneBill class."""
     phone_bill.get_phone_end_records = mock.Mock(return_value=[record_start])
     phone_bill.get_phone_start_records = mock.Mock(return_value=[record_start])
+    get_by_id.return_value = None
     bill_call_record = PhoneBillCall(
         record_start.destination_number,
+        record_start.call_identifier,
         record_start.record_timestamp,
         record_start.record_timestamp
     )
@@ -568,6 +583,7 @@ def test_phone_bill_call_to_dict(phone_bill_call):
     assert result == {
         'id': phone_bill_call.id,
         'destination_number': phone_bill_call.destination_number,
+        'call_identifier': phone_bill_call.call_identifier,
         'call_start': phone_bill_call.call_start,
         'call_end': phone_bill_call.call_end,
         'duration': phone_bill_call.duration,
@@ -585,6 +601,7 @@ def test_phone_bill_call_validate(phone_bill_call):
 def test_phone_bill_call_validate_mandatory():
     """Test validate function from PhoneBillCall class missing mandatory fields."""
     obj = PhoneBillCall(
+        None,
         None,
         None,
         None,
@@ -621,12 +638,12 @@ def test_phone_bill_call_save_insert(get_db, check_exists_id, phone_bill_call):
     get_db.return_value.cursor.return_value.execute.assert_called_once_with(
         (
             'INSERT INTO phone_bill_call ('
-            'destination_number, call_start, call_end, duration, price, id'
-            ') VALUES (?, ?, ?, ?, ?, ?)'
+            'destination_number, call_start, call_end, duration, price, call_identifier, id'
+            ') VALUES (?, ?, ?, ?, ?, ?, ?)'
         ),
         [
             phone_bill_call.destination_number, phone_bill_call.call_start, phone_bill_call.call_end,
-            phone_bill_call.duration, phone_bill_call.price, phone_bill_call.id
+            phone_bill_call.duration, phone_bill_call.price, phone_bill_call.call_identifier, phone_bill_call.id
         ]
     )
 
@@ -645,12 +662,12 @@ def test_phone_bill_call_save_update(get_db, check_exists_id, phone_bill_call):
     get_db.return_value.cursor.return_value.execute.assert_called_once_with(
         (
             'UPDATE phone_bill_call SET'
-            ' destination_number = ?, call_start = ?, call_end = ?, duration = ?, price = ?'
+            ' destination_number = ?, call_start = ?, call_end = ?, duration = ?, price = ?, call_identifier = ?'
             ' WHERE id = ?'
         ),
         [
             phone_bill_call.destination_number, phone_bill_call.call_start, phone_bill_call.call_end,
-            phone_bill_call.duration, phone_bill_call.price, phone_bill_call.id
+            phone_bill_call.duration, phone_bill_call.price, phone_bill_call.call_identifier, phone_bill_call.id
         ]
     )
 
@@ -680,3 +697,35 @@ def test_check_exists_id():
 
     assert result
     cursor.execute.assert_called_once_with('SELECT 1 FROM table WHERE id_of_table = 33')
+
+
+@mock.patch('api.models.get_db')
+def test_get_by_id(get_db):
+    """Test get_by_id function."""
+    get_db.return_value.cursor.return_value.execute.return_value.fetchone.return_value = {'a': 1}
+
+    table_name = 'table'
+    id_field = 'id_of_table'
+    id_value = 33
+
+    result = get_by_id(table_name, id_field, id_value)
+
+    assert result
+
+    get_db.return_value.cursor.return_value.execute.assert_called_once_with(
+        'SELECT * FROM table WHERE id_of_table = 33'
+    )
+
+
+@mock.patch('api.models.get_db')
+def test_get_by_id_without_id(get_db):
+    """Test get_by_id function when id_value is not present on parameters."""
+    table_name = 'table'
+    id_field = 'id_of_table'
+    id_value = None
+
+    result = get_by_id(table_name, id_field, id_value)
+
+    assert not result
+
+    get_db.return_value.cursor.return_value.execute.assert_not_called()

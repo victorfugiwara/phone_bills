@@ -2,6 +2,7 @@
 import os
 import tempfile
 
+import mock
 import pytest
 
 from api import create_app
@@ -30,6 +31,7 @@ INVALID_PHONE_BILL_TYPES = {
 
 VALID_PHONE_BILL_CALL = {
     'destination_number': '14981227002',
+    'call_identifier': 1,
     'call_start': '2018-11-11T19:22:16',
     'call_end': '2018-11-11T19:22:16',
     'bill_call_id': 1,
@@ -68,8 +70,10 @@ def runner(app):
 
 
 @pytest.fixture
-def record_start():
+@mock.patch('api.models.get_by_id')
+def record_start(get_by_id):
     """Fixture to return a valid PhoneCall start object."""
+    get_by_id.return_value = None
     return CallRecord(
         VALID_CALL_RECORD_START.get('record_id'),
         VALID_CALL_RECORD_START.get('record_type'),
@@ -81,8 +85,10 @@ def record_start():
 
 
 @pytest.fixture
-def phone_bill():
+@mock.patch('api.models.get_by_id')
+def phone_bill(get_by_id):
     """Fixture to return a valid PhoneBill object."""
+    get_by_id.return_value = None
     return PhoneBill(
         VALID_PHONE_BILL.get('phone_number'),
         VALID_PHONE_BILL.get('period'),
@@ -90,8 +96,10 @@ def phone_bill():
 
 
 @pytest.fixture
-def invalid_phone_bill():
+@mock.patch('api.models.get_by_id')
+def invalid_phone_bill(get_by_id):
     """Fixture to return a valid PhoneBill object."""
+    get_by_id.return_value = None
     return PhoneBill(
         INVALID_PHONE_BILL_TYPES.get('phone_number'),
         INVALID_PHONE_BILL_TYPES.get('period'),
@@ -100,10 +108,13 @@ def invalid_phone_bill():
 
 
 @pytest.fixture
-def phone_bill_call():
+@mock.patch('api.models.get_by_id')
+def phone_bill_call(get_by_id):
     """Fixture to return a valid PhoneBill object."""
+    get_by_id.return_value = None
     return PhoneBillCall(
         VALID_PHONE_BILL_CALL.get('destination_number'),
+        VALID_PHONE_BILL_CALL.get('call_identifier'),
         VALID_PHONE_BILL_CALL.get('call_start'),
         VALID_PHONE_BILL_CALL.get('call_end'),
         bill_call_id=VALID_PHONE_BILL_CALL.get('bill_call_id'),

@@ -15,6 +15,22 @@ class CallRecord:
         self, record_id, record_type, record_timestamp, call_identifier, origin_number=None, destination_number=None
     ):
         """Constructor used to populate the data of the object."""
+        if record_id:
+            existent = get_by_id(
+                self.TABLE_NAME,
+                'record_id',
+                record_id,
+                ['record_type', 'record_timestamp', 'call_identifier', 'origin_number', 'destination_number']
+            )
+            if existent:
+                self.record_id = record_id
+                self.record_type = existent.get('record_type')
+                self.record_timestamp = existent.get('record_timestamp')
+                self.call_identifier = existent.get('call_identifier')
+                self.origin_number = existent.get('origin_number')
+                self.destination_number = existent.get('destination_number')
+                return
+
         self.record_id = record_id
         self.record_type = record_type
         self.record_timestamp = get_date_or_none(record_timestamp)
@@ -303,9 +319,14 @@ class PhoneBill:
                 continue
             phone_bill_call = PhoneBillCall(
                 start_record.destination_number,
+                start_record.call_identifier,
                 start_record.record_timestamp,
                 end_record.record_timestamp
             )
+            if phone_bill_call.id:
+                self.total += phone_bill_call.price
+                self.record_calls.append(phone_bill_call)
+                continue
 
             standard_initial_time = phone_bill_call.call_start.replace(
                 hour=standard_initial_hours, minute=standard_initial_minutes
@@ -387,9 +408,27 @@ class PhoneBillCall:
 
     TABLE_NAME = 'phone_bill_call'
 
-    def __init__(self, destination_number, call_start, call_end, bill_call_id=None):
+    def __init__(self, destination_number, call_identifier, call_start, call_end, bill_call_id=None):
         """Constructor used to populate the data of the object."""
+        if call_identifier:
+            existent = get_by_id(
+                self.TABLE_NAME,
+                'call_identifier',
+                call_identifier,
+                ['id', 'destination_number', 'call_start', 'call_end', 'duration', 'price']
+            )
+            if existent:
+                self.call_identifier = call_identifier
+                self.id = existent.get('id')
+                self.destination_number = existent.get('destination_number')
+                self.call_start = existent.get('call_start')
+                self.call_end = existent.get('call_end')
+                self.duration = existent.get('duration')
+                self.price = existent.get('price')
+                return
+
         self.destination_number = destination_number
+        self.call_identifier = call_identifier
         self.call_start = get_date_or_none(call_start)
         self.call_end = get_date_or_none(call_end)
         if self.call_start and self.call_end:
@@ -402,6 +441,7 @@ class PhoneBillCall:
         return {
             'id': self.id,
             'destination_number': self.destination_number,
+            'call_identifier': self.call_identifier,
             'call_start': self.call_start,
             'call_end': self.call_end,
             'duration': self.duration,
@@ -438,11 +478,17 @@ class PhoneBillCall:
         exists_id = check_exists_id(cursor, self.TABLE_NAME, 'id', self.id)
 
         if exists_id:
-            update = 'destination_number = ?, call_start = ?, call_end = ?, duration = ?, price = ?'
+            update = (
+                'destination_number = ?, call_start = ?, call_end = ?, duration = ?,'
+                ' price = ?, call_identifier = ?'
+            )
 
             sql_command = 'UPDATE {} SET {} WHERE id = ?'.format(self.TABLE_NAME, update)
         else:
-            fields = ['destination_number', 'call_start', 'call_end', 'duration', 'price']
+            fields = [
+                'destination_number', 'call_start', 'call_end', 'duration',
+                'price', 'call_identifier'
+            ]
             if self.id:
                 fields.append('id')
 
@@ -452,7 +498,9 @@ class PhoneBillCall:
                 ', '.join(['?'] * len(fields))
             )
 
-        values = [self.destination_number, self.call_start, self.call_end, self.duration, self.price]
+        values = [
+            self.destination_number, self.call_start, self.call_end, self.duration,
+            self.price, self.call_identifier]
         if self.id:
             values.append(self.id)
 
@@ -483,3 +531,35 @@ def check_exists_id(cursor, table_name, id_field, id_value):
     result = cursor.execute(sql_command)
 
     return result.fetchone() is not None
+
+
+def get_by_id(table_name, id_field, id_value, fields=None):
+    """
+    Check if there is some record on the table with the id.
+
+    Args:
+        table_name (str): Name of the table that will be used in the verification.
+        if_field (str): Name of the id field that will be used to check the value.
+        id_value (int): Value of the id that will be searched on the id field of the table.
+
+    Returns:
+        True - id exists.
+        False - id not exists.
+    """
+    if not id_value:
+        return None
+
+    cursor = get_db().cursor()
+
+    sql_command = 'SELECT {} FROM {} WHERE {} = {}'.format(
+        '*' if not fields else ', '.join(fields),
+        table_name,
+        id_field,
+        id_value
+    )
+    result = cursor.execute(sql_command).fetchone()
+
+    if result:
+        return dict(result)
+
+    return None
