@@ -134,7 +134,7 @@ class PhoneBill:
 
     TABLE_NAME = 'phone_bill'
 
-    def __init__(self, phone_number, period=None, record_calls=None):
+    def __init__(self, phone_number, period=None, record_calls=None, bill_id=None):
         """Constructor used to populate the data of the object."""
         self.phone_number = phone_number
         if period:
@@ -147,6 +147,7 @@ class PhoneBill:
             self.record_calls = []
 
         self.total = 0
+        self.id = bill_id
 
     def to_dict(self):
         """Format the object in a json document."""
@@ -231,11 +232,11 @@ class PhoneBill:
         if not self.period or not self.phone_number:
             return False
 
-        sql_command = 'SELECT 1 FROM {} WHERE period = ? AND phone_number = ?'.format(self.TABLE_NAME)
+        sql_command = 'SELECT id FROM {} WHERE period = ? AND phone_number = ?'.format(self.TABLE_NAME)
         cursor = get_db().cursor()
-        result = cursor.execute(sql_command, [self.period, self.phone_number])
+        result = cursor.execute(sql_command, [self.period, self.phone_number]).fetchone()
 
-        return result.fetchone() is not None
+        return result['id'] if result else None
 
     def get_phone_end_records(self):
         """Return the existent list of record calls. If it is empty, will calculate."""
@@ -379,9 +380,11 @@ class PhoneBill:
         db = get_db()
         cursor = db.cursor()
 
-        exists_period = self.exists_period()
+        existent_period = self.exists_period()
         result = None
-        if not exists_period:
+        if existent_period:
+            self.id = existent_period
+        else:
             fields = ['phone_number', 'period']
 
             sql_command = 'INSERT INTO {} ({}) VALUES ({})'.format(
@@ -394,8 +397,11 @@ class PhoneBill:
 
         if result and result.rowcount <= 0:
             return False
+        elif result:
+            self.id = result.lastrowid
 
         for call in self.record_calls:
+            call.bill_id = self.id
             call.save()
 
         db.commit()
@@ -408,7 +414,7 @@ class PhoneBillCall:
 
     TABLE_NAME = 'phone_bill_call'
 
-    def __init__(self, destination_number, call_identifier, call_start, call_end, bill_call_id=None):
+    def __init__(self, destination_number, call_identifier, call_start, call_end, bill_id=None, bill_call_id=None):
         """Constructor used to populate the data of the object."""
         if call_identifier:
             existent = get_by_id(
@@ -424,6 +430,7 @@ class PhoneBillCall:
                 self.call_start = existent.get('call_start')
                 self.call_end = existent.get('call_end')
                 self.duration = existent.get('duration')
+                self.bill_id = existent.get('bill_id')
                 self.price = existent.get('price')
                 return
 
@@ -433,14 +440,16 @@ class PhoneBillCall:
         self.call_end = get_date_or_none(call_end)
         if self.call_start and self.call_end:
             self.duration = str(self.call_end - self.call_start)
-        self.id = bill_call_id
+        self.bill_id = bill_id
         self.price = None
+        self.id = bill_call_id
 
     def to_dict(self):
         """Format the object in a json document."""
         return {
             'id': self.id,
             'destination_number': self.destination_number,
+            'bill_id': self.bill_id,
             'call_identifier': self.call_identifier,
             'call_start': self.call_start,
             'call_end': self.call_end,
@@ -480,14 +489,14 @@ class PhoneBillCall:
         if exists_id:
             update = (
                 'destination_number = ?, call_start = ?, call_end = ?, duration = ?,'
-                ' price = ?, call_identifier = ?'
+                ' price = ?, call_identifier = ?, bill_id = ?'
             )
 
             sql_command = 'UPDATE {} SET {} WHERE id = ?'.format(self.TABLE_NAME, update)
         else:
             fields = [
                 'destination_number', 'call_start', 'call_end', 'duration',
-                'price', 'call_identifier'
+                'price', 'call_identifier', 'bill_id'
             ]
             if self.id:
                 fields.append('id')
@@ -500,7 +509,7 @@ class PhoneBillCall:
 
         values = [
             self.destination_number, self.call_start, self.call_end, self.duration,
-            self.price, self.call_identifier]
+            self.price, self.call_identifier, self.bill_id]
         if self.id:
             values.append(self.id)
 

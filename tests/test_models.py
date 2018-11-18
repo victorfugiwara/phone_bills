@@ -303,30 +303,6 @@ def test_phone_bill_validate_types(invalid_phone_bill):
     assert 'The field record_calls has an invalid value.' in result
 
 
-def test_phone_bill_exists_period_invalid_without_parameter(phone_bill):
-    """Test exists_period function from PhoneBill class without parameters."""
-    phone_bill.period = None
-    phone_bill.phone_number = None
-
-    result = phone_bill.exists_period()
-
-    assert not result
-
-
-@mock.patch('api.models.get_db')
-def test_phone_bill_exists_period(get_db, phone_bill):
-    """Test exists_period function from PhoneBill class."""
-    get_db.return_value.cursor.return_value.execute.return_value.fetchone.return_value = (1)
-
-    result = phone_bill.exists_period()
-
-    assert result
-    get_db.return_value.cursor.return_value.execute.assert_called_once_with(
-        'SELECT 1 FROM phone_bill WHERE period = ? AND phone_number = ?',
-        [phone_bill.period, phone_bill.phone_number]
-    )
-
-
 def test_phone_bill_to_dict():
     """Test to_dict function from PhoneBill class."""
     record_to_dict = mock.Mock()
@@ -419,13 +395,13 @@ def test_phone_bill_exists_period_invalid_data(phone_number, period, phone_bill)
 @mock.patch('api.models.get_db')
 def test_phone_bill_exists_period(get_db, phone_bill):
     """Test exists_period function from PhoneBill class."""
-    get_db.return_value.cursor.return_value.execute.return_value.fetchone.return_value = {}
+    get_db.return_value.cursor.return_value.execute.return_value.fetchone.return_value = {'id': 1}
 
     result = phone_bill.exists_period()
 
     assert result
     get_db.return_value.cursor.return_value.execute.assert_called_once_with(
-        'SELECT 1 FROM phone_bill WHERE period = ? AND phone_number = ?',
+        'SELECT id FROM phone_bill WHERE period = ? AND phone_number = ?',
         [phone_bill.period, phone_bill.phone_number]
     )
 
@@ -583,6 +559,7 @@ def test_phone_bill_call_to_dict(phone_bill_call):
     assert result == {
         'id': phone_bill_call.id,
         'destination_number': phone_bill_call.destination_number,
+        'bill_id': phone_bill_call.bill_id,
         'call_identifier': phone_bill_call.call_identifier,
         'call_start': phone_bill_call.call_start,
         'call_end': phone_bill_call.call_end,
@@ -638,12 +615,13 @@ def test_phone_bill_call_save_insert(get_db, check_exists_id, phone_bill_call):
     get_db.return_value.cursor.return_value.execute.assert_called_once_with(
         (
             'INSERT INTO phone_bill_call ('
-            'destination_number, call_start, call_end, duration, price, call_identifier, id'
-            ') VALUES (?, ?, ?, ?, ?, ?, ?)'
+            'destination_number, call_start, call_end, duration, price, call_identifier, bill_id, id'
+            ') VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         ),
         [
-            phone_bill_call.destination_number, phone_bill_call.call_start, phone_bill_call.call_end,
-            phone_bill_call.duration, phone_bill_call.price, phone_bill_call.call_identifier, phone_bill_call.id
+            phone_bill_call.destination_number, phone_bill_call.call_start,
+            phone_bill_call.call_end, phone_bill_call.duration, phone_bill_call.price,
+            phone_bill_call.call_identifier, phone_bill_call.bill_id, phone_bill_call.id
         ]
     )
 
@@ -662,12 +640,14 @@ def test_phone_bill_call_save_update(get_db, check_exists_id, phone_bill_call):
     get_db.return_value.cursor.return_value.execute.assert_called_once_with(
         (
             'UPDATE phone_bill_call SET'
-            ' destination_number = ?, call_start = ?, call_end = ?, duration = ?, price = ?, call_identifier = ?'
+            ' destination_number = ?, call_start = ?, call_end = ?, duration = ?,'
+            ' price = ?, call_identifier = ?, bill_id = ?'
             ' WHERE id = ?'
         ),
         [
-            phone_bill_call.destination_number, phone_bill_call.call_start, phone_bill_call.call_end,
-            phone_bill_call.duration, phone_bill_call.price, phone_bill_call.call_identifier, phone_bill_call.id
+            phone_bill_call.destination_number, phone_bill_call.call_start,
+            phone_bill_call.call_end, phone_bill_call.duration, phone_bill_call.price,
+            phone_bill_call.call_identifier, phone_bill_call.bill_id, phone_bill_call.id
         ]
     )
 
