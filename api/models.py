@@ -372,8 +372,11 @@ class PhoneBill:
                 aux_date = comparsion_date
                 standard_time = not standard_time
 
+            phone_bill_call.price = round(phone_bill_call.price, 2)
             self.total += phone_bill_call.price
             self.record_calls.append(phone_bill_call)
+
+        self.total = round(self.total, 2)
 
     def save(self):
         """Save the Phone Bill data on the database."""

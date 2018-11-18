@@ -709,3 +709,51 @@ def test_get_by_id_without_id(get_db):
     assert not result
 
     get_db.return_value.cursor.return_value.execute.assert_not_called()
+
+
+@mock.patch('api.models.get_by_id')
+def test_calculate_phone_bill_with_data(get_by_id, phone_bill):
+    """Test calculate_phone_bill function with a list of record calls mocked."""
+    end_records = [
+        CallRecord(None, 'end', '2018-10-05T06:00:02', 11),
+        CallRecord(None, 'end', '2018-10-09T06:01:00', 12),
+        CallRecord(None, 'end', '2018-10-13T00:00:00', 13),
+        CallRecord(None, 'end', '2018-10-16T05:59:34', 14),
+        CallRecord(None, 'end', '2018-10-18T12:02:45', 15),
+        CallRecord(None, 'end', '2018-10-20T23:59:59', 16),
+        CallRecord(None, 'end', '2018-10-23T01:59:59', 17),
+        CallRecord(None, 'end', '2018-10-25T22:00:00', 18),
+        CallRecord(None, 'end', '2018-10-27T22:01:55', 19),
+        CallRecord(None, 'end', '2018-10-30T06:30:26', 20)
+    ]
+    start_records = [
+        CallRecord(None, 'start', '2018-10-05T06:00:00', 11, '14981226543', '14998887654'),
+        CallRecord(None, 'start', '2018-10-09T06:00:04', 12, '14981226543', '14998887654'),
+        CallRecord(None, 'start', '2018-10-12T23:23:23', 13, '14981226543', '1432324455'),
+        CallRecord(None, 'start', '2018-10-16T04:54:21', 14, '14981226543', '1432324455'),
+        CallRecord(None, 'start', '2018-10-18T12:01:45', 15, '14981226543', '1833445566'),
+        CallRecord(None, 'start', '2018-10-20T23:58:59', 16, '14981226543', '1434357263'),
+        CallRecord(None, 'start', '2018-10-23T01:00:00', 17, '14981226543', '1432324455'),
+        CallRecord(None, 'start', '2018-10-25T19:56:23', 18, '14981226543', '1943536785'),
+        CallRecord(None, 'start', '2018-10-27T20:15:55', 19, '14981226543', '1345632789'),
+        CallRecord(None, 'start', '2018-10-30T05:30:04', 20, '14981226543', '1345632789')
+    ]
+
+    phone_bill.get_phone_end_records = mock.Mock(return_value=end_records)
+    phone_bill.get_phone_start_records = mock.Mock(return_value=start_records)
+    get_by_id.return_value = None
+
+    phone_bill.calculate_phone_bill()
+
+    assert phone_bill.total == 26.91
+
+    assert phone_bill.record_calls[0].price == 0.36
+    assert phone_bill.record_calls[1].price == 0.36
+    assert phone_bill.record_calls[2].price == 0.36
+    assert phone_bill.record_calls[3].price == 0.36
+    assert phone_bill.record_calls[4].price == 0.45
+    assert phone_bill.record_calls[5].price == 0.36
+    assert phone_bill.record_calls[6].price == 0.36
+    assert phone_bill.record_calls[7].price == 11.43
+    assert phone_bill.record_calls[8].price == 9.72
+    assert phone_bill.record_calls[9].price == 3.15
